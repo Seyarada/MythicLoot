@@ -1,0 +1,6 @@
+name: MythicLoot
+main: net.seyarada.mythicloot.MythicLoot
+version: 1.11
+api-version: 1.13
+depend: [MythicMobs]
+softdepend: [MythicArtifacts]
