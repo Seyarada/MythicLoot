@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -156,7 +157,9 @@ public class DropItem {
 	    	         if(tempTitle!=null) title = tempTitle;	 
 	    	         String tempSubtitle = subDrop.getString(new String[] { "subtitle", "st"}, null);
 	    	         if(tempSubtitle!=null) subtitle = tempSubtitle;	 
-	    	         if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
+	    	         
+	    	         String tempCommand = subDrop.getString(new String[] { "command", "cmd"}, null);
+	    	         if(tempCommand!=null) command = tempCommand;
 	    	         
 	    	         if (type instanceof IItemDrop) {
 	    	        	ItemStack mythicItem =  BukkitAdapter.adapt(((IItemDrop)type).getDrop(new DropMetadata(null, BukkitAdapter.adapt(p))));
@@ -165,8 +168,13 @@ public class DropItem {
 	    		}
 	    	}
 	    	else {
-	    		Optional<MythicItem> t = MythicMobs.inst().getItemManager().getItem(item);
-	            ItemStack mythicItem = BukkitAdapter.adapt(t.get().generateItemStack(amount));
+	    		Optional<MythicItem> mI = MythicMobs.inst().getItemManager().getItem(item);
+	    		ItemStack mythicItem = null;
+	    		try {
+	    			mythicItem = BukkitAdapter.adapt(mI.get().generateItemStack(amount));
+	    		} catch (Exception j) {
+	    			mythicItem = new ItemStack(Material.valueOf(item.toUpperCase()), amount);
+	    		}
 	    		drop(player, e, mythicItem);
 	    	}
 	    	if(stop) players.remove();
@@ -190,12 +198,16 @@ public class DropItem {
     		    players.sendMessage(cct(broadcast.replace("<player>", player)));
     		}
     	}
-    	Item dropped = e.getWorld().dropItemNaturally(e.getLocation(), mythicItem);
-    	//System.out.println(player+" got "+dropped.getItemStack());
-    	//System.out.println(player+" the droptable was "+dropTable);
-    	if(glow) u.ColorHandler(dropped, color);
-    	//System.out.println(player+" color is "+color);
-    	if(explode) s.explodeParticles(dropped,p,color,expheight,expoffset);
+    	if(mythicItem!=null&&mythicItem.getType()!=Material.AIR) {
+    		Item dropped = e.getWorld().dropItemNaturally(e.getLocation(), mythicItem);
+    		//System.out.println(player+" got "+dropped.getItemStack());
+        	//System.out.println(player+" the droptable was "+dropTable);
+        	if(glow) u.ColorHandler(dropped, color);
+        	//System.out.println(player+" color is "+color);
+        	if(explode) s.explodeParticles(dropped,p,color,expheight,expoffset);
+        	s.keepInvisible(dropped,player);
+    	}
+    	
     	if(sound!=null) p.playSound(p.getLocation(), Sound.valueOf(sound), 1, 1);
     	
     	//System.out.println(player+" title is "+title);
@@ -203,7 +215,7 @@ public class DropItem {
     	if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle), 1, 40, 1);
     	else if(subtitle==null&&title!=null)p.sendTitle(cct(title), "", 1, 40, 1);
     	else if(title!=null||subtitle!=null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
-    	s.keepInvisible(dropped,player);
+    	if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
 	}
 	
 	public String cct(String msg) {
