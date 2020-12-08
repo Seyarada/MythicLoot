@@ -41,6 +41,7 @@ public class DropItem {
 	private String sound;
 	private String broadcast;
 	private String item;
+	private String command;
 	private boolean glow;
 	private boolean stop;
 	private boolean explode;
@@ -72,6 +73,7 @@ public class DropItem {
 			color = mlc.getString(new String[] { "color", "cl"}, "display");
 			title = mlc.getString(new String[] { "title", "t"}, null);
 			subtitle = mlc.getString(new String[] { "subtitle", "st"}, null);
+			command = mlc.getString(new String[] { "command", "cmd"}, null);
 			sound = mlc.getString(new String[] { "sound", "sd"}, null);
 			broadcast = mlc.getString(new String[] { "broadcast", "bc", "b"}, null);
 			if(sound!=null) sound=sound.replace(".", "_").toUpperCase();
@@ -79,10 +81,12 @@ public class DropItem {
 			stop = mlc.getBoolean(new String[] { "stop", "s"}, false);
 			explode = mlc.getBoolean(new String[] { "explode", "ex", "e"}, true);
 			amount = mlc.getInteger(new String[] { "amount", "a"}, 1);
-			top = mlc.getInteger(new String[] { "top", "t"}, -1);
+			top = mlc.getInteger(new String[] { "top", "T"}, -1);
 			chance = mlc.getDouble(new String[] { "chance", "c"}, 1.0);
 			expheight = mlc.getDouble(new String[] { "expheight", "exh"}, 0.6);
 			expoffset = mlc.getDouble(new String[] { "expoffset", "exo"}, 0.2);
+			
+			
 	    	
 	        Entry<String, Double> pair = players.next();
 	        String player = (String) pair.getKey();
@@ -152,6 +156,7 @@ public class DropItem {
 	    	         if(tempTitle!=null) title = tempTitle;	 
 	    	         String tempSubtitle = subDrop.getString(new String[] { "subtitle", "st"}, null);
 	    	         if(tempSubtitle!=null) subtitle = tempSubtitle;	 
+	    	         if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
 	    	         
 	    	         if (type instanceof IItemDrop) {
 	    	        	ItemStack mythicItem =  BukkitAdapter.adapt(((IItemDrop)type).getDrop(new DropMetadata(null, BukkitAdapter.adapt(p))));
