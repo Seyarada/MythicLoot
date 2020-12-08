@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
 import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.seyarada.mythicloot.Config;
 
 public class Board {
@@ -74,6 +75,8 @@ public class Board {
 			    	}
 			    }
 			    
+			    
+			    line = PlaceholderAPI.setPlaceholders(target, line);
 			    if(!skip) u.msg(target, line);
 			}
 		}
