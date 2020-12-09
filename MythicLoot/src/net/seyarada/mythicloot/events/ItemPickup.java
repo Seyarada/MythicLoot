@@ -24,7 +24,12 @@ public class ItemPickup implements Listener {
 		if(e.getEntity() instanceof Player) {
 			
 			String p = ((Player)e.getEntity()).getName();
-			CompoundTag a = MythicMobs.inst().getVolatileCodeHandler().getItemHandler().getNBTData(e.getItem().getItemStack());
+			CompoundTag a;
+			try {
+				a = MythicMobs.inst().getVolatileCodeHandler().getItemHandler().getNBTData(e.getItem().getItemStack());
+			} catch (Exception k){
+				return;
+			}
 			if(a.containsKey("mythicloot")) {
 				if(a.getString("mythicloot").equals(p)) {
 					

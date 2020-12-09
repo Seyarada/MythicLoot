@@ -173,7 +173,15 @@ public class DropItem {
 	    		try {
 	    			mythicItem = BukkitAdapter.adapt(mI.get().generateItemStack(amount));
 	    		} catch (Exception j) {
-	    			mythicItem = new ItemStack(Material.valueOf(item.toUpperCase()), amount);
+	    			try {
+						mythicItem = new ItemStack(Material.valueOf(item.toUpperCase()), amount);
+					} catch (Exception k) {
+						Bukkit.getServer().getConsoleSender().sendMessage(
+								"§c[ERROR] §eMythicLoot isn't able to create an item for "+
+								item+"! Verify that you can get this item with in-game commands" +
+								" like §b/mm i get <item> §e, as ML needs MM items to work for them to be dropped");
+						return;
+					}
 	    		}
 	    		drop(player, e, mythicItem);
 	    	}
@@ -187,7 +195,7 @@ public class DropItem {
         mythicItem = MythicItem.addItemNBT(mythicItem, "Base", tags);
     	Player p = Bukkit.getPlayer(player);
     	//System.out.println(player+" Message is "+msg);
-    	if(msg!=null) {
+    	if(msg!=null&&p!=null) {
     		//System.out.println(player+" Executing message");
     		p.sendMessage(cct(msg));
     	}
