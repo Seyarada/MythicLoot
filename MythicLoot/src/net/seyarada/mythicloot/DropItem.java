@@ -169,7 +169,7 @@ public class DropItem {
 	    	}
 	    	else {
 	    		Optional<MythicItem> mI = MythicMobs.inst().getItemManager().getItem(item);
-	    		ItemStack mythicItem = null;
+	    		ItemStack mythicItem;
 	    		try {
 	    			mythicItem = BukkitAdapter.adapt(mI.get().generateItemStack(amount));
 	    		} catch (Exception j) {
@@ -222,7 +222,7 @@ public class DropItem {
     	//System.out.println(player+" subtitle is "+subtitle);
     	if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle), 1, 40, 1);
     	else if(subtitle==null&&title!=null)p.sendTitle(cct(title), "", 1, 40, 1);
-    	else if(title!=null||subtitle!=null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
+    	else if(title != null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
     	if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
 	}
 	

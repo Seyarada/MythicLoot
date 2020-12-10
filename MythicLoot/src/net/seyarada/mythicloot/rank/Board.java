@@ -1,16 +1,17 @@
 package net.seyarada.mythicloot.rank;
 
 import java.text.DecimalFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R3.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
@@ -20,6 +21,7 @@ import net.seyarada.mythicloot.Config;
 
 public class Board {
 
+	private org.bukkit.Location Location;
 	Util u = new Util();
 	Config c = new Config();
 	
@@ -36,10 +38,12 @@ public class Board {
 		for(Entry<String, Double> abc:list) {
 			
 			position++;
-			Player target = Bukkit.getPlayer(abc.getKey());	
-			
+			Player target = Bukkit.getPlayer(abc.getKey());
+			List<String> messages = new ArrayList<>();
+
 			for(Object j:c.getConfig()) {
 				boolean skip = false;
+				if(j==null) continue;
 				String line = j.toString();
 				if (line.contains("<mob.name>")) line = line.replace("<mob.name>", mobName);
 				if (line.contains("<mob.hp>")) line = line.replace("<mob.hp>", mobHP);
@@ -77,10 +81,44 @@ public class Board {
 			    
 			    
 			    line = PlaceholderAPI.setPlaceholders(target, line);
-			    if(!skip) u.msg(target, line);
+			    if(!skip) {
+
+			    	u.msg(target, line);
+			    	messages.add(line);
+
+				}
+			}
+
+			Collections.reverse(messages);
+			spawnHologram(uuid, target, messages);
+		}
+	}
+
+	public void spawnHologram(UUID uuid, Player player, List<String> messages) {
+
+		Location location = Bukkit.getEntity(uuid).getLocation();
+		WorldServer wS = ((CraftWorld)location.getWorld()).getHandle();
+		double lX = location.getX();
+		double lY = location.getY()+1.5;
+		double lZ = location.getZ();
+
+		for(String msg : messages) {
+			lY += 0.2;
+			if(!msg.isEmpty()) {
+				final EntityArmorStand armorStand = new EntityArmorStand(EntityTypes.ARMOR_STAND, wS);
+				armorStand.setPosition(lX, lY, lZ);
+				armorStand.setCustomName(CraftChatMessage.fromStringOrNull(msg));
+				armorStand.setCustomNameVisible(true);
+				armorStand.setInvisible(true);
+				armorStand.setMarker(true);
+				PacketPlayOutSpawnEntity packetPlayOutSpawnEntity = new PacketPlayOutSpawnEntity(armorStand);
+				PacketPlayOutEntityMetadata metadata = new PacketPlayOutEntityMetadata(armorStand.getId(), armorStand.getDataWatcher(), true);
+
+				final PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+				connection.sendPacket(packetPlayOutSpawnEntity);
+				connection.sendPacket(metadata);
 			}
 		}
-		
 	}
 	
 }
