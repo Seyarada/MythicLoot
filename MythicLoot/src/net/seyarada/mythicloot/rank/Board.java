@@ -7,6 +7,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.minecraft.server.v1_16_R3.*;
+import net.seyarada.mythicloot.MythicLoot;
+import net.seyarada.mythicloot.nms.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
@@ -18,6 +20,8 @@ import io.lumine.xikage.mythicmobs.MythicMobs;
 import io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.seyarada.mythicloot.Config;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Board {
 
@@ -83,7 +87,7 @@ public class Board {
 			    line = PlaceholderAPI.setPlaceholders(target, line);
 			    if(!skip) {
 
-			    	u.msg(target, line);
+			    	u.msg(target, line.trim());
 			    	messages.add(line);
 
 				}
@@ -96,29 +100,42 @@ public class Board {
 
 	public void spawnHologram(UUID uuid, Player player, List<String> messages) {
 
-		Location location = Bukkit.getEntity(uuid).getLocation();
-		WorldServer wS = ((CraftWorld)location.getWorld()).getHandle();
-		double lX = location.getX();
-		double lY = location.getY()+1.5;
-		double lZ = location.getZ();
+		String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
 
-		for(String msg : messages) {
-			lY += 0.2;
-			if(!msg.isEmpty()) {
-				final EntityArmorStand armorStand = new EntityArmorStand(EntityTypes.ARMOR_STAND, wS);
-				armorStand.setPosition(lX, lY, lZ);
-				armorStand.setCustomName(CraftChatMessage.fromStringOrNull(msg));
-				armorStand.setCustomNameVisible(true);
-				armorStand.setInvisible(true);
-				armorStand.setMarker(true);
-				PacketPlayOutSpawnEntity packetPlayOutSpawnEntity = new PacketPlayOutSpawnEntity(armorStand);
-				PacketPlayOutEntityMetadata metadata = new PacketPlayOutEntityMetadata(armorStand.getId(), armorStand.getDataWatcher(), true);
+		switch (version) {
+			case "v1_16_R3":
+				new V1_16_R3().spawnHologram(uuid, player, messages);
 
-				final PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
-				connection.sendPacket(packetPlayOutSpawnEntity);
-				connection.sendPacket(metadata);
-			}
+				break;
+			case "v1_16_R2":
+				new V1_16_R2().spawnHologram(uuid, player, messages);
+
+				break;
+			case "v1_16_R1":
+				new V1_16_R1().spawnHologram(uuid, player, messages);
+
+				break;
+			case "v1_15_R1":
+				new V1_15_R1().spawnHologram(uuid, player, messages);
+
+				break;
+			case "v1_14_R1":
+				new V1_14_R1().spawnHologram(uuid, player, messages);
+
+				break;
+			case "v1_13_R2":
+				new V1_13_R2().spawnHologram(uuid, player, messages);
+
+				break;
+			case "v1_13_R1":
+				new V1_13_R1().spawnHologram(uuid, player, messages);
+
+				break;
+			case "v1_12_R1":
+				new V1_12_R1().spawnHologram(uuid, player, messages);
+				break;
 		}
+
 	}
 	
 }
