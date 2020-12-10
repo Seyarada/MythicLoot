@@ -55,12 +55,11 @@ public class QuitEvent implements Listener {
 				if (k != null && k.contains(name)) {
 					if(config.getBoolean("Options.ResetHeal")&&data.get().size()>0) {
 						LivingEntity a = ((LivingEntity) Bukkit.getEntity(mUUID));
-						double health = a.getHealth()+data.get().get(name);
-						double maxHP = a.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-						if(health>maxHP)
-							a.setHealth(maxHP);
-						else
-							a.setHealth(health);
+						if(a!=null) {
+							double health = a.getHealth()+data.get().get(name);
+							double maxHP = a.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+							a.setHealth(Math.min(health, maxHP));
+						}
 					}
 					k.remove(name);
 				}

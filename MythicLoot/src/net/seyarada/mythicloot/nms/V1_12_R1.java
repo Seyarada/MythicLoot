@@ -30,7 +30,7 @@ public class V1_12_R1 {
 	
 	public void destroyEntity(Item item, Entity entity) {
 		PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(item.getEntityId());
-		((CraftPlayer) ((Player)entity)).getHandle().playerConnection.sendPacket(packet);
+		((CraftPlayer) entity).getHandle().playerConnection.sendPacket(packet);
 	}
 
 	public void spawnHologram(UUID uuid, Player player, List<String> messages) {

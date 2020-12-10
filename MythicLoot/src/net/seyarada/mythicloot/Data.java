@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public class Data {
 
-	private static List<UUID> loadedMobs = new ArrayList<UUID>();
-	private static HashMap<UUID, HashMap<String, Double>> mythicLoot = new HashMap<UUID, HashMap<String, Double>>();
+	private static final List<UUID> loadedMobs = new ArrayList<>();
+	private static final HashMap<UUID, HashMap<String, Double>> mythicLoot = new HashMap<>();
 	private final UUID uuid;
 	
 	public Data(UUID uuid) {

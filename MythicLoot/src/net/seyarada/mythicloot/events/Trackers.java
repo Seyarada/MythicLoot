@@ -26,7 +26,7 @@ public class Trackers implements Listener {
 		if(data.isRegistered()) {
 			data.forget();
 			data.remove();
-		};
+		}
 	}
 	
 }

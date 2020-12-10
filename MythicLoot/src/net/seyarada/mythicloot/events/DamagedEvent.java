@@ -27,11 +27,6 @@ public class DamagedEvent implements Listener {
 			
 			if (data.exists())
 			{
-					// Stores who damaged the mob and the amount
-					HashMap<String, Double> damage = new HashMap<String, Double>();
-					damage.put( event.getDamager().getName(), finalDamage );
-					
-					
 					// Gets the damage map of the entity
 					HashMap<String, Double> damageMap = data.get();
 					
@@ -44,16 +39,17 @@ public class DamagedEvent implements Listener {
 						damageMap.put(event.getDamager().getName(), finalDamage);}
 					// Pushes the data to the main hashmap
 					data.put(damageMap);
+
 			} else {
 				// Stores who damaged the mob and the amount
-				HashMap<String, Double> damage = new HashMap<String, Double>();
+				HashMap<String, Double> damage = new HashMap<>();
 				damage.put( event.getDamager().getName(), finalDamage );
 				// Creates a new entry in the hashmap with the player and damage
 				data.put(damage);
-				};
+				}
 				
 			
-		};
+		}
 	}
 	
 }

@@ -23,7 +23,7 @@ public class ItemPickup implements Listener {
 	public void onPickup(EntityPickupItemEvent e) {
 		if(e.getEntity() instanceof Player) {
 			
-			String p = ((Player)e.getEntity()).getName();
+			String p = e.getEntity().getName();
 			CompoundTag a;
 			try {
 				a = MythicMobs.inst().getVolatileCodeHandler().getItemHandler().getNBTData(e.getItem().getItemStack());
@@ -34,31 +34,40 @@ public class ItemPickup implements Listener {
 				if(a.getString("mythicloot").equals(p)) {
 					
 					String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-					
-					if (version.equals("v1_16_R3")) {
-						new V1_16_R3().removeNBT(e);
 
-				    } else if (version.equals("v1_16_R2")) {
-				    	new V1_16_R2().removeNBT(e);
-				    	
-				    } else if (version.equals("v1_16_R1")) {
-				    	new V1_16_R1().removeNBT(e);
-				    	
-				    } else if (version.equals("v1_15_R1")) {
-				    	new V1_15_R1().removeNBT(e);
-				    	
-				    } else if (version.equals("v1_14_R1")) {
-				    	new V1_14_R1().removeNBT(e);
-				    	
-				    } else if (version.equals("v1_13_R2")) {
-				    	new V1_13_R2().removeNBT(e);
-				    	
-				    } else if (version.equals("v1_13_R1")) {
-				    	new V1_13_R1().removeNBT(e);
-				    	
-				    } else if (version.equals("v1_12_R1")) {
-				    	new V1_12_R1().removeNBT(e);
-				    }
+					switch (version) {
+						case "v1_16_R3":
+							new V1_16_R3().removeNBT(e);
+							break;
+
+						case "v1_16_R2":
+							new V1_16_R2().removeNBT(e);
+							break;
+
+						case "v1_16_R1":
+							new V1_16_R1().removeNBT(e);
+							break;
+
+						case "v1_15_R1":
+							new V1_15_R1().removeNBT(e);
+							break;
+
+						case "v1_14_R1":
+							new V1_14_R1().removeNBT(e);
+							break;
+
+						case "v1_13_R2":
+							new V1_13_R2().removeNBT(e);
+							break;
+
+						case "v1_13_R1":
+							new V1_13_R1().removeNBT(e);
+							break;
+
+						case "v1_12_R1":
+							new V1_12_R1().removeNBT(e);
+							break;
+					}
 				}
 				else e.setCancelled(true);
 			}

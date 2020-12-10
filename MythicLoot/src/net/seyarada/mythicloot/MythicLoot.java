@@ -1,11 +1,8 @@
 package net.seyarada.mythicloot;
 
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MythicLoot extends JavaPlugin {
-
-	public Plugin plugin = this;
 	
 	net.seyarada.mythicloot.events.DamagedEvent DamagedEvent = new net.seyarada.mythicloot.events.DamagedEvent();
 	net.seyarada.mythicloot.events.DeathEvent   DeathEvent 	 = new net.seyarada.mythicloot.events.DeathEvent();

@@ -1,6 +1,5 @@
 package net.seyarada.mythicloot;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,13 +57,11 @@ public class DropItem {
 		
 		dropTable = null;
 		
-		Comparator<Map.Entry<String, Double>> comparator = Comparator.comparing(Map.Entry::getValue);
-		Collections.sort(topDamagers, comparator.reversed());
+		Comparator<Map.Entry<String, Double>> comparator = Entry.comparingByValue();
+		topDamagers.sort(comparator.reversed());
 		
 		Optional<DropTable> maybeTable = MythicMobs.inst().getDropManager().getDropTable(item);
-	     if (maybeTable.isPresent()) {
-	    	 dropTable = (DropTable)maybeTable.get();
-	     }
+		maybeTable.ifPresent(table -> dropTable = table);
 		
 		Iterator<Entry<String, Double>> players = data.get().entrySet().iterator();
 	    while (players.hasNext()) {
@@ -90,89 +87,73 @@ public class DropItem {
 			
 	    	
 	        Entry<String, Double> pair = players.next();
-	        String player = (String) pair.getKey();
-	        double value = (double) pair.getValue();
-	        
-	        //System.out.println("Running drops for "+player+" with "+ value+" damage:");
-	        
-	        // Checks if the target meets the requirements ( chance, damage dealt & top )
+	        String player = pair.getKey();
+	        double value = pair.getValue();
+
+
 	        boolean skip = true;
 	    	double r = Math.random();
 	    	if (r>=chance) continue;
 	    	if(dmg.contains("%")){
 	    		if (dmg.contains("to")) {
-	    			String[] vals = dmg.replace("%", "").split("to");
-	    			if (Double.valueOf(vals[0]) <= value/HP*100 && Double.valueOf(vals[1]) >= value/HP*100) {
-	    				//System.out.println(player+" Condition for % damage met!");
+	    			String[] values = dmg.replace("%", "").split("to");
+	    			if (Double.parseDouble(values[0]) <= value/HP*100 && Double.parseDouble(values[1]) >= value/HP*100) {
 	    				skip=false;
 	    			}
 	    		}
-	    		else if (value/HP*100 >= Double.valueOf(dmg.replace("%", ""))) skip=false;
+	    		else if (value/HP*100 >= Double.parseDouble(dmg.replace("%", ""))) skip=false;
 	    	}
 	    	else if (dmg.contains("to")) {
     			String[] vals = dmg.split("to");
-    			if (Double.valueOf(vals[0]) <= value && Double.valueOf(vals[1]) >= value) {
-    				//System.out.println(player+" Condition for ranged damage met!");
+    			if (Double.parseDouble(vals[0]) <= value && Double.parseDouble(vals[1]) >= value) {
     				skip=false;
     			}
     		}
-	    	else if (value >= Double.valueOf(dmg)) {
-	    		//System.out.println(player+" Condition for damage met!");
+	    	else if (value >= Double.parseDouble(dmg)) {
 	    		skip=false;
 	    	}
 	    	if(top>0) {
 	    		if(topDamagers.size()<top) {
-	    			//System.out.println(player+" Player is not the top, skipping!");
 	    			skip=true;
 	    		} else {
 	    			Entry<String, Double> a = topDamagers.get(top-1);
-		    		if (player.equals(a.getKey())) {
-		    			//System.out.println(player+" Player being top is met!");
-		    			skip=false;
-		    		} else {
-		    			//System.out.println(player+" Player is not the top, skipping!");
-		    			skip=true;
-		    		}
+					skip = !player.equals(a.getKey());
 	    		}
 	    	}
 	    	
 	    	if(skip) continue;
-	    	
-	    	//System.out.println(player+" Everything ok! Going to drop the item");
-	    	
-	    	// Drops the item
+
 	    	if(dropTable!=null) {
 	    		Player p = Bukkit.getPlayer(player);
 	    		LootBag loot = dropTable.generate(new DropMetadata(null, BukkitAdapter.adapt(p)));
-	    		Iterator<Drop> toDrop = loot.getDrops().iterator();
-	    		while(toDrop.hasNext()) {
-	    	         Drop type = (Drop)toDrop.next();
-	    	         MythicLineConfig subDrop = new MythicLineConfig((String) type.getLine());
-	    	         String tempSound = subDrop.getString(new String[] { "sound", "sd"}, null);
-	    	         if(tempSound!=null) sound = tempSound;
-	    	         String tempBroadcast = subDrop.getString(new String[] { "broadcast", "bc", "b"}, null);
-	    	         if(tempBroadcast!=null) broadcast = tempBroadcast;	 
-	    	         
-	    	         String tempTitle = subDrop.getString(new String[] { "title", "t"}, null);
-	    	         if(tempTitle!=null) title = tempTitle;	 
-	    	         String tempSubtitle = subDrop.getString(new String[] { "subtitle", "st"}, null);
-	    	         if(tempSubtitle!=null) subtitle = tempSubtitle;	 
-	    	         
-	    	         String tempCommand = subDrop.getString(new String[] { "command", "cmd"}, null);
-	    	         if(tempCommand!=null) command = tempCommand;
-	    	         
-	    	         if (type instanceof IItemDrop) {
-	    	        	ItemStack mythicItem =  BukkitAdapter.adapt(((IItemDrop)type).getDrop(new DropMetadata(null, BukkitAdapter.adapt(p))));
-	    	            drop(player, e, mythicItem);
-	    	         }
-	    		}
+
+				for (Drop type : loot.getDrops()) {
+					MythicLineConfig subDrop = new MythicLineConfig(type.getLine());
+					String tempSound = subDrop.getString(new String[]{"sound", "sd"}, null);
+					if (tempSound != null) sound = tempSound;
+					String tempBroadcast = subDrop.getString(new String[]{"broadcast", "bc", "b"}, null);
+					if (tempBroadcast != null) broadcast = tempBroadcast;
+
+					String tempTitle = subDrop.getString(new String[]{"title", "t"}, null);
+					if (tempTitle != null) title = tempTitle;
+					String tempSubtitle = subDrop.getString(new String[]{"subtitle", "st"}, null);
+					if (tempSubtitle != null) subtitle = tempSubtitle;
+
+					String tempCommand = subDrop.getString(new String[]{"command", "cmd"}, null);
+					if (tempCommand != null) command = tempCommand;
+
+					if (type instanceof IItemDrop) {
+						ItemStack mythicItem = BukkitAdapter.adapt(((IItemDrop) type).getDrop(new DropMetadata(null, BukkitAdapter.adapt(p))));
+						drop(player, e, mythicItem);
+					}
+				}
 	    	}
 	    	else {
-	    		Optional<MythicItem> mI = MythicMobs.inst().getItemManager().getItem(item);
-	    		ItemStack mythicItem;
-	    		try {
-	    			mythicItem = BukkitAdapter.adapt(mI.get().generateItemStack(amount));
-	    		} catch (Exception j) {
+				Optional<MythicItem> mI = MythicMobs.inst().getItemManager().getItem(item);
+				ItemStack mythicItem;
+				if (mI.isPresent()) {
+					mythicItem = BukkitAdapter.adapt(mI.get().generateItemStack(amount));
+				} else {
 	    			try {
 						mythicItem = new ItemStack(Material.valueOf(item.toUpperCase()), amount);
 					} catch (Exception k) {
@@ -190,40 +171,31 @@ public class DropItem {
 	}
 	
 	public void drop(String player, Entity e, ItemStack mythicItem) {
-        Map<String, String> tags = new HashMap<String, String>();
+        Map<String, String> tags = new HashMap<>();
 	    tags.put("mythicloot", player);
         mythicItem = MythicItem.addItemNBT(mythicItem, "Base", tags);
     	Player p = Bukkit.getPlayer(player);
-    	//System.out.println(player+" Message is "+msg);
     	if(msg!=null&&p!=null) {
-    		//System.out.println(player+" Executing message");
     		p.sendMessage(cct(msg));
     	}
-    	//System.out.println(player+" broadcast is "+broadcast);
     	if(broadcast!=null) {
-    		//System.out.println(player+" Executing broadcast");
     		for (Player players : Bukkit.getOnlinePlayers()) {
     		    players.sendMessage(cct(broadcast.replace("<player>", player)));
     		}
     	}
     	if(mythicItem!=null&&mythicItem.getType()!=Material.AIR) {
     		Item dropped = e.getWorld().dropItemNaturally(e.getLocation(), mythicItem);
-    		//System.out.println(player+" got "+dropped.getItemStack());
-        	//System.out.println(player+" the droptable was "+dropTable);
         	if(glow) u.ColorHandler(dropped, color);
-        	//System.out.println(player+" color is "+color);
         	if(explode) s.explodeParticles(dropped,p,color,expheight,expoffset);
         	s.keepInvisible(dropped,player);
     	}
-    	
-    	if(sound!=null) p.playSound(p.getLocation(), Sound.valueOf(sound), 1, 1);
-    	
-    	//System.out.println(player+" title is "+title);
-    	//System.out.println(player+" subtitle is "+subtitle);
-    	if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle), 1, 40, 1);
-    	else if(subtitle==null&&title!=null)p.sendTitle(cct(title), "", 1, 40, 1);
-    	else if(title != null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
-    	if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
+    	if(p!=null) {
+			if(sound!=null) p.playSound(p.getLocation(), Sound.valueOf(sound), 1, 1);
+			if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle), 1, 40, 1);
+			else if(subtitle==null&&title!=null)p.sendTitle(cct(title), "", 1, 40, 1);
+			else if(title != null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
+			if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
+		}
 	}
 	
 	public String cct(String msg) {
