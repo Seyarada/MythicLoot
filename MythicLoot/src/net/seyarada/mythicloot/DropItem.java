@@ -45,6 +45,7 @@ public class DropItem {
 	private boolean glow;
 	private boolean stop;
 	private boolean explode;
+	private boolean toInv;
 	private int amount;
 	private int top;
 	private double chance;
@@ -78,6 +79,7 @@ public class DropItem {
 	    	glow = mlc.getBoolean(new String[] { "glow", "g"}, true);
 			stop = mlc.getBoolean(new String[] { "stop", "s"}, false);
 			explode = mlc.getBoolean(new String[] { "explode", "ex", "e"}, true);
+			toInv = mlc.getBoolean(new String[] { "toinv", "ti"}, false);
 			amount = mlc.getInteger(new String[] { "amount", "a"}, 1);
 			top = mlc.getInteger(new String[] { "top", "T"}, -1);
 			chance = mlc.getDouble(new String[] { "chance", "c"}, 1.0);
@@ -129,18 +131,24 @@ public class DropItem {
 
 				for (Drop type : loot.getDrops()) {
 					MythicLineConfig subDrop = new MythicLineConfig(type.getLine());
+
 					String tempSound = subDrop.getString(new String[]{"sound", "sd"}, null);
 					if (tempSound != null) sound = tempSound;
+
 					String tempBroadcast = subDrop.getString(new String[]{"broadcast", "bc", "b"}, null);
 					if (tempBroadcast != null) broadcast = tempBroadcast;
 
 					String tempTitle = subDrop.getString(new String[]{"title", "t"}, null);
 					if (tempTitle != null) title = tempTitle;
+
 					String tempSubtitle = subDrop.getString(new String[]{"subtitle", "st"}, null);
 					if (tempSubtitle != null) subtitle = tempSubtitle;
 
 					String tempCommand = subDrop.getString(new String[]{"command", "cmd"}, null);
 					if (tempCommand != null) command = tempCommand;
+
+					boolean tempInv = subDrop.getBoolean(new String[] { "toinv", "ti"}, false);
+					if (tempInv) toInv = true;
 
 					if (type instanceof IItemDrop) {
 						ItemStack mythicItem = BukkitAdapter.adapt(((IItemDrop) type).getDrop(new DropMetadata(null, BukkitAdapter.adapt(p))));
@@ -171,10 +179,12 @@ public class DropItem {
 	}
 	
 	public void drop(String player, Entity e, ItemStack mythicItem) {
+
+		Player p = Bukkit.getServer().getPlayer(player);
+
         Map<String, String> tags = new HashMap<>();
 	    tags.put("mythicloot", player);
         mythicItem = MythicItem.addItemNBT(mythicItem, "Base", tags);
-    	Player p = Bukkit.getPlayer(player);
     	if(msg!=null&&p!=null) {
     		p.sendMessage(cct(msg));
     	}
@@ -183,18 +193,25 @@ public class DropItem {
     		    players.sendMessage(cct(broadcast.replace("<player>", player)));
     		}
     	}
-    	if(mythicItem!=null&&mythicItem.getType()!=Material.AIR) {
-    		Item dropped = e.getWorld().dropItemNaturally(e.getLocation(), mythicItem);
-        	if(glow) u.ColorHandler(dropped, color);
-        	if(explode) s.explodeParticles(dropped,p,color,expheight,expoffset);
-        	s.keepInvisible(dropped,player);
-    	}
+
     	if(p!=null) {
 			if(sound!=null) p.playSound(p.getLocation(), Sound.valueOf(sound), 1, 1);
 			if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle), 1, 40, 1);
 			else if(subtitle==null&&title!=null)p.sendTitle(cct(title), "", 1, 40, 1);
 			else if(title != null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
 			if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
+		}
+
+		if(toInv&&p!=null && p.getInventory().firstEmpty()>=0) {
+			p.getInventory().addItem(mythicItem);
+			return;
+		}
+
+		if(mythicItem!=null&&mythicItem.getType()!=Material.AIR) {
+			Item dropped = e.getWorld().dropItemNaturally(e.getLocation(), mythicItem);
+			if(glow) u.ColorHandler(dropped, color);
+			if(explode) s.explodeParticles(dropped,p,color,expheight,expoffset);
+			s.keepInvisible(dropped,player);
 		}
 	}
 	
