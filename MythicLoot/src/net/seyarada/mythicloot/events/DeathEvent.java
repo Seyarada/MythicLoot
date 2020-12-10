@@ -3,6 +3,7 @@ package net.seyarada.mythicloot.events;
 import java.util.LinkedList;
 import java.util.UUID;
 
+import io.lumine.xikage.mythicmobs.io.MythicConfig;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -22,12 +23,12 @@ public class DeathEvent implements Listener {
 			
 			// General data that doesn't needs to be collected in the foreach
 			double HP = data.get().values().stream().mapToDouble(Double::valueOf).sum();
-		
-			
-			if (e.getMobType().getConfig().getBoolean("Options.AnnounceRank")) {
-				
-				new Board(new LinkedList<>(data.get().entrySet()), uuid, HP);
-				
+
+			MythicConfig config = e.getMobType().getConfig();
+			boolean rank = config.getBoolean("Options.AnnounceRank");
+			boolean score = config.getBoolean("Options.AnnounceScore");
+			if (rank||score) {
+				new Board(new LinkedList<>(data.get().entrySet()), uuid, HP, rank, score);
 			}
 			
 			

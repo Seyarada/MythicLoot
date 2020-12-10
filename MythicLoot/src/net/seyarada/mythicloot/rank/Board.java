@@ -19,7 +19,8 @@ public class Board {
 	Util u = new Util();
 	Config c = new Config();
 	
-	public Board(LinkedList<Map.Entry<String, Double>> list, UUID uuid, double HP) {
+	public Board(LinkedList<Map.Entry<String, Double>> list, UUID uuid,
+				 double HP, boolean announceRank, boolean announceScore) {
 		
 		Comparator<Map.Entry<String, Double>> comparator = Entry.comparingByValue();
 		list.sort(comparator.reversed());
@@ -72,19 +73,23 @@ public class Board {
 			    		
 			    	}
 			    }
-			    
-			    
-			    line = PlaceholderAPI.setPlaceholders(target, line);
+
+
+			    line = PlaceholderAPI.setPlaceholders(target, line).trim();
 			    if(!skip) {
 
-			    	u.msg(target, line.trim());
-			    	messages.add(line);
+			    	if(announceRank)
+			    		u.msg(target, line);
+					if(announceScore)
+						messages.add(line);
 
 				}
 			}
 
-			Collections.reverse(messages);
-			spawnHologram(uuid, target, messages);
+			if(announceScore) {
+				Collections.reverse(messages);
+				spawnHologram(uuid, target, messages);
+			}
 		}
 	}
 
