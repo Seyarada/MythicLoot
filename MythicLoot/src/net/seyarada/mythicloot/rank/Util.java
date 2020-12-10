@@ -15,35 +15,35 @@ public class Util {
 		item.setGlowing(true);
 		Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
 	
-		if(item.getItemStack().getItemMeta().getDisplayName().startsWith("�0"))
+		if(item.getItemStack().getItemMeta().getDisplayName().startsWith("§0"))
 			color = "BLACK";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�1"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§1"))
 			color = "DARK_BLUE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�2"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§2"))
 			color = "DARK_GREEN";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�3"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§3"))
 			color = "DARK_AQUA";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�4"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§4"))
 			color = "DARK_RED";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�5"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§5"))
 			color = "DARK_PURPLE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�6"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§6"))
 			color = "GOLD";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�7"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§7"))
 			color = "GRAY";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�8"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§8"))
 			color = "DARK_GRAY";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�9"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§9"))
 			color = "BLUE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�a"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§a"))
 			color = "GREEN";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�b"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§b"))
 			color = "AQUA";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�c"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§c"))
 			color = "RED";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�d"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§d"))
 			color = "LIGHT_PURPLE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�e"))
+		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§e"))
 			color = "YELLOW";
 		
 	    switch(color.toUpperCase()) {
@@ -196,35 +196,35 @@ public class Util {
 	public String getColor(Item item, String color) {
 		
 		if(color.equals("display")) {
-			if(item.getItemStack().getItemMeta().getDisplayName().startsWith("�0"))
+			if(item.getItemStack().getItemMeta().getDisplayName().startsWith("§0"))
 				return "BLACK";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�1"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§1"))
 				return "DARK_BLUE";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�2"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§2"))
 				return "DARK_GREEN";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�3"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§3"))
 				return "DARK_AQUA";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�4"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§4"))
 				return "DARK_RED";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�5"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§5"))
 				return "DARK_PURPLE";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�6"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§6"))
 				return "GOLD";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�7"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§7"))
 				return "GRAY";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�8"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§8"))
 				return "DARK_GRAY";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�9"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§9"))
 				return "BLUE";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�a"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§a"))
 				return "GREEN";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�b"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§b"))
 				return "AQUA";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�c"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§c"))
 				return "RED";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�d"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§d"))
 				return "LIGHT_PURPLE";
-			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("�e"))
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§e"))
 				return "YELLOW";
 		} else {
 			return color.toUpperCase();
@@ -297,7 +297,7 @@ public class Util {
                 boolean isBold = false;
                
                 for(char c : message.toCharArray()){
-                        if(c == '�'){
+                        if(c == '§'){
                                 previousCode = true;
                                 continue;
                         }else if(previousCode == true){
