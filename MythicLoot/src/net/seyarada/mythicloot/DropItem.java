@@ -7,7 +7,10 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -35,6 +38,7 @@ public class DropItem {
 	
 	private String msg;
 	private String dmg;
+	private String top;
 	private String color;
 	private String title;
 	private String subtitle;
@@ -47,7 +51,6 @@ public class DropItem {
 	private boolean explode;
 	private boolean toInv;
 	private int amount;
-	private int top;
 	private double chance;
 	private double expheight;
 	private double expoffset;
@@ -81,7 +84,7 @@ public class DropItem {
 			explode = mlc.getBoolean(new String[] { "explode", "ex", "e"}, true);
 			toInv = mlc.getBoolean(new String[] { "toinv", "ti"}, false);
 			amount = mlc.getInteger(new String[] { "amount", "a"}, 1);
-			top = mlc.getInteger(new String[] { "top", "T"}, -1);
+			top = mlc.getString(new String[] { "top", "T"}, null);
 			chance = mlc.getDouble(new String[] { "chance", "c"}, 1.0);
 			expheight = mlc.getDouble(new String[] { "expheight", "exh"}, 0.6);
 			expoffset = mlc.getDouble(new String[] { "expoffset", "exo"}, 0.2);
@@ -93,37 +96,51 @@ public class DropItem {
 	        double value = pair.getValue();
 
 
-	        boolean skip = true;
+	        AtomicBoolean skip = new AtomicBoolean(true);
 	    	double r = Math.random();
 	    	if (r>=chance) continue;
 	    	if(dmg.contains("%")){
 	    		if (dmg.contains("to")) {
 	    			String[] values = dmg.replace("%", "").split("to");
 	    			if (Double.parseDouble(values[0]) <= value/HP*100 && Double.parseDouble(values[1]) >= value/HP*100) {
-	    				skip=false;
+	    				skip.set(false);
 	    			}
 	    		}
-	    		else if (value/HP*100 >= Double.parseDouble(dmg.replace("%", ""))) skip=false;
+	    		else if (value/HP*100 >= Double.parseDouble(dmg.replace("%", ""))) skip.set(false);
 	    	}
 	    	else if (dmg.contains("to")) {
     			String[] vals = dmg.split("to");
     			if (Double.parseDouble(vals[0]) <= value && Double.parseDouble(vals[1]) >= value) {
-    				skip=false;
+    				skip.set(false);
     			}
     		}
 	    	else if (value >= Double.parseDouble(dmg)) {
-	    		skip=false;
+	    		skip.set(false);
 	    	}
-	    	if(top>0) {
-	    		if(topDamagers.size()<top) {
-	    			skip=true;
-	    		} else {
-	    			Entry<String, Double> a = topDamagers.get(top-1);
-					skip = !player.equals(a.getKey());
-	    		}
+
+	    	if(top!=null) {
+
+	    		if (top.contains("to")) {
+					String[] values = top.split("to");
+					int i1 = Integer.parseInt(values[0]);
+					int i2 = Integer.parseInt(values[0])+1;
+
+					IntStream.range(i1, i2).forEachOrdered(n -> {
+						Entry<String, Double> a = topDamagers.get(n-1);
+						skip.set(!player.equals(a.getKey()));
+					});
+				} else {
+	    			int topR = Integer.parseInt(top);
+					if(topDamagers.size()<topR) {
+						skip.set(true);
+					} else {
+						Entry<String, Double> a = topDamagers.get(topR-1);
+						skip.set(!player.equals(a.getKey()));
+					}
+				}
 	    	}
 	    	
-	    	if(skip) continue;
+	    	if(skip.get()) continue;
 
 	    	if(dropTable!=null) {
 	    		Player p = Bukkit.getPlayer(player);
@@ -186,20 +203,21 @@ public class DropItem {
 	    tags.put("mythicloot", player);
         mythicItem = MythicItem.addItemNBT(mythicItem, "Base", tags);
     	if(msg!=null&&p!=null) {
-    		p.sendMessage(cct(msg));
+    		p.sendMessage(cct(msg, p));
     	}
     	if(broadcast!=null) {
     		for (Player players : Bukkit.getOnlinePlayers()) {
-    		    players.sendMessage(cct(broadcast.replace("<player>", player)));
+    		    players.sendMessage(cct(broadcast.replace("<player>", player), p));
     		}
     	}
 
     	if(p!=null) {
 			if(sound!=null) p.playSound(p.getLocation(), Sound.valueOf(sound), 1, 1);
-			if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle), 1, 40, 1);
-			else if(subtitle==null&&title!=null)p.sendTitle(cct(title), "", 1, 40, 1);
-			else if(title != null) p.sendTitle(cct(title), cct(subtitle), 1, 40, 1);
-			if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("<player.name>", p.getName()));
+			if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle, p), 1, 40, 1);
+			else if(subtitle==null&&title!=null)p.sendTitle(cct(title, p), "", 1, 40, 1);
+			else if(title != null) p.sendTitle(cct(title, p), cct(subtitle, p), 1, 40, 1);
+			if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+					command.replace("<player.name>", p.getName()));
 		}
 
 		if(toInv&&p!=null && p.getInventory().firstEmpty()>=0) {
@@ -215,8 +233,8 @@ public class DropItem {
 		}
 	}
 	
-	public String cct(String msg) {
-		return ChatColor.translateAlternateColorCodes('&', msg);
+	public String cct(String msg, Player p) {
+		return PlaceholderAPI.setPlaceholders(p, ChatColor.translateAlternateColorCodes('&', msg));
 	}
 	
 }

@@ -36,60 +36,90 @@ public class Board {
 			Player target = Bukkit.getPlayer(abc.getKey());
 			List<String> messages = new ArrayList<>();
 
-			for(Object j:c.getConfig()) {
-				boolean skip = false;
-				if(j==null) continue;
-				String line = j.toString();
-				if (line.contains("<mob.name>")) line = line.replace("<mob.name>", mobName);
-				if (line.contains("<mob.hp>")) line = line.replace("<mob.hp>", mobHP);
-				if (line.contains("<player.rank>")) line = line.replace("<player.rank>", String.valueOf(position));
-				
-			    String pattern = "<([0-9]*).name>";
-			    Pattern r = Pattern.compile(pattern);
-			    Matcher m = r.matcher(line);
-			    if (m.find( )) {
-			    	for (int i = 0; i < m.groupCount(); i++) {
-			    		int index = Integer.parseInt(m.group(i).replace(".name>", "").replace("<", ""));
-			    		if (index<=rankers && list.size() >= index) {
-			    			line = line.replace("<"+index+".name>", list.get(index-1).getKey());
-			    		} else {
-			    			skip = true;
-			    		}
-			    		
-			    	}
-			    }
-			    
-			    pattern = "<([0-9]*).dmg>";
-			    r = Pattern.compile(pattern);
-			    m = r.matcher(line);
-			    if (m.find( )) {
-			    	for (int i = 0; i < m.groupCount(); i++) {
-			    		int index = Integer.parseInt(m.group(i).replace(".dmg>", "").replace("<", ""));
-			    		if (index<=rankers && list.size() >= index) {
-			    			line = line.replace("<"+index+".dmg>", String.valueOf(new DecimalFormat("#.##").format(list.get(index-1).getValue() /HP*100)));
-			    		} else {
-			    			skip = true;
-			    		}
-			    		
-			    	}
-			    }
+			if(announceRank) cycle(c.getRankConfig(), true, false, rankers, position, mobName, mobHP,
+					list, abc, HP, target, messages, uuid);
+			if(announceScore)  cycle(c.getScoreConfig(), false, true, rankers, position, mobName, mobHP,
+					list, abc, HP, target, messages, uuid);
 
+		}
+	}
 
-			    line = PlaceholderAPI.setPlaceholders(target, line).trim();
-			    if(!skip) {
+	public void cycle(List<?> config, boolean announceRank, boolean announceScore, int rankers,
+					  int position, String mobName, String mobHP, LinkedList<Entry<String, Double>> list,
+					  Entry<String, Double> abc, double HP, Player target, List<String> messages, UUID uuid) {
 
-			    	if(announceRank)
-			    		u.msg(target, line);
-					if(announceScore)
-						messages.add(line);
+		for(Object j:config) {
+			boolean skip = false;
+			if(j==null) continue;
+			String line = j.toString();
+			if (line.contains("<mob.name>")) line = line.replace("<mob.name>", mobName);
+			if (line.contains("<mob.hp>")) line = line.replace("<mob.hp>", mobHP);
+			if (line.contains("<player.rank>")) line = line.replace("<player.rank>", String.valueOf(position));
+			if (line.contains("<player.dmg>"))
+				line = line.replace("<player.dmg>", new DecimalFormat("#.##").format(abc.getValue()/HP*100));
+			if (line.contains("<player.damage>"))
+				line = line.replace("<player.damage>", new DecimalFormat("#.##").format(abc.getValue()));
+
+			String pattern = "<([0-9]*).name>";
+			Pattern r = Pattern.compile(pattern);
+			Matcher m = r.matcher(line);
+			if (m.find( )) {
+				for (int i = 0; i < m.groupCount(); i++) {
+					int index = Integer.parseInt(m.group(i).replace(".name>", "").replace("<", ""));
+					if (index<=rankers && list.size() >= index) {
+						line = line.replace("<"+index+".name>", list.get(index-1).getKey());
+					} else {
+						skip = true;
+					}
 
 				}
 			}
 
-			if(announceScore) {
-				Collections.reverse(messages);
-				spawnHologram(uuid, target, messages);
+			pattern = "<([0-9]*).dmg>";
+			r = Pattern.compile(pattern);
+			m = r.matcher(line);
+			if (m.find( )) {
+				for (int i = 0; i < m.groupCount(); i++) {
+					int index = Integer.parseInt(m.group(i).replace(".dmg>", "").replace("<", ""));
+					if (index<=rankers && list.size() >= index) {
+						line = line.replace("<"+index+".dmg>", String.valueOf(new DecimalFormat("#.##").format(list.get(index-1).getValue() /HP*100)));
+					} else {
+						skip = true;
+					}
+
+				}
 			}
+
+			pattern = "<([0-9]*).damage>";
+			r = Pattern.compile(pattern);
+			m = r.matcher(line);
+			if (m.find( )) {
+				for (int i = 0; i < m.groupCount(); i++) {
+					int index = Integer.parseInt(m.group(i).replace(".damage>", "").replace("<", ""));
+					if (index<=rankers && list.size() >= index) {
+						line = line.replace("<"+index+".damage>", new DecimalFormat("#.##").format(list.get(index-1).getValue()));
+					} else {
+						skip = true;
+					}
+
+				}
+			}
+
+
+			line = PlaceholderAPI.setPlaceholders(target, line).trim();
+			if(!skip) {
+
+				if(announceRank)
+					u.msg(target, line);
+				if(announceScore)
+					messages.add(line);
+
+			}
+		}
+
+		if(announceScore) {
+			Collections.reverse(messages);
+			spawnHologram(uuid, target, messages);
 		}
 	}
 
