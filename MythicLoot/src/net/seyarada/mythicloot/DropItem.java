@@ -144,7 +144,9 @@ public class DropItem {
 
 	    	if(dropTable!=null) {
 	    		Player p = Bukkit.getPlayer(player);
-	    		LootBag loot = dropTable.generate(new DropMetadata(null, BukkitAdapter.adapt(p)));
+	    		LootBag loot = dropTable.generate(new DropMetadata(MythicMobs.inst().getMobManager().
+						getMythicMobInstance(BukkitAdapter.adapt(e))
+								, BukkitAdapter.adapt(p)));
 
 				for (Drop type : loot.getDrops()) {
 					MythicLineConfig subDrop = new MythicLineConfig(type.getLine());

@@ -289,7 +289,10 @@ public class Util {
 	}
 	
 	public void sendCenteredMessage(Player player, String message){
-        if(message == null || message.equals("")) player.sendMessage("");
+		if(player==null) return;
+        if(message == null || message.equals(""))
+        	player.sendMessage("");
+
                 message = ChatColor.translateAlternateColorCodes('&', message);
                
                 int messagePxSize = 0;
