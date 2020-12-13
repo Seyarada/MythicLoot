@@ -59,6 +59,8 @@ public class DropItem {
 	DropTable dropTable;
 
 	public void prepareDrop(MythicLineConfig mlc, Data data, double HP, Entity e, LinkedList<Map.Entry<String, Double>> topDamagers) {
+	    shared = false;
+	    hasDropped = false;
 		item = mlc.getKey();
 		
 		dropTable = null;
@@ -72,6 +74,7 @@ public class DropItem {
 		Iterator<Entry<String, Double>> players = data.get().entrySet().iterator();
 		int k = 0;
 	    while (players.hasNext()) {
+
 	    	k++;
 
 	    	msg = mlc.getString(new String[] { "message", "msg", "m"}, null);
@@ -106,7 +109,7 @@ public class DropItem {
 	        double value = pair.getValue();
 
 
-	        AtomicBoolean skip = new AtomicBoolean(true);
+	        AtomicBoolean skip = new AtomicBoolean(false);
 	    	if(dmg.contains("%")){
 	    		if (dmg.contains("to")) {
 	    			String[] values = dmg.replace("%", "").split("to");
@@ -133,14 +136,14 @@ public class DropItem {
 					int i1 = Integer.parseInt(values[0]);
 					int i2 = Integer.parseInt(values[1])+1;
 
-					stop = false;
+                    final boolean[] stopTop = {false};
 
 					IntStream.range(i1, i2).forEachOrdered(n -> {
-						if(!stop) {
+						if(!stopTop[0]) {
 							Entry<String, Double> a = topDamagers.get(n-1);
 							if(player.equals(a.getKey())) {
 								skip.set(false);
-								stop = true;
+                                stopTop[0] = true;
 							} else {
 								skip.set(true);
 							}
@@ -173,7 +176,7 @@ public class DropItem {
 	    	
 	    	if(skip.get()) continue;
 
-	    	hasDropped = true;
+            if(shared) hasDropped = true;
 
 	    	if(dropTable!=null) {
 	    		Player p = Bukkit.getPlayer(player);
