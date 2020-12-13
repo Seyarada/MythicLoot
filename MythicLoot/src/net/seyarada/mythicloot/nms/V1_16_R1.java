@@ -56,9 +56,11 @@ public class V1_16_R1 {
 				PacketPlayOutSpawnEntity packetPlayOutSpawnEntity = new PacketPlayOutSpawnEntity(armorStand, 1);
 				PacketPlayOutEntityMetadata metadata = new PacketPlayOutEntityMetadata(armorStand.getId(), armorStand.getDataWatcher(), true);
 
-				final PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
-				connection.sendPacket(packetPlayOutSpawnEntity);
-				connection.sendPacket(metadata);
+				if(player!=null && player.isOnline() && ((CraftPlayer) player).getHandle()!=null) {
+					final PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+					connection.sendPacket(packetPlayOutSpawnEntity);
+					connection.sendPacket(metadata);
+				}
 
 				new BukkitRunnable() {
 

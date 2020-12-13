@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.seyarada.mythicloot.nms.*;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
@@ -105,8 +106,10 @@ public class Board {
 				}
 			}
 
-
-			line = PlaceholderAPI.setPlaceholders(target, line).trim();
+			if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
+				line = PlaceholderAPI.setPlaceholders(target, line).trim();
+			else
+				line = cct(line, target).trim();
 			if(!skip) {
 
 				if(announceRank)
@@ -161,6 +164,13 @@ public class Board {
 				break;
 		}
 
+	}
+
+	public String cct(String msg, Player p) {
+		if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
+			return PlaceholderAPI.setPlaceholders(p, ChatColor.translateAlternateColorCodes('&', msg));
+		else
+			return ChatColor.translateAlternateColorCodes('&', msg);
 	}
 	
 }

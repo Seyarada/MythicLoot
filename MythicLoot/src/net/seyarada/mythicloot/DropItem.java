@@ -50,8 +50,10 @@ public class DropItem {
 	private boolean stop;
 	private boolean explode;
 	private boolean toInv;
+	private boolean shared;
+	private boolean hasDropped;
 	private int amount;
-	private double chance;
+	private float chance;
 	private double expheight;
 	private double expoffset;
 	DropTable dropTable;
@@ -68,8 +70,10 @@ public class DropItem {
 		maybeTable.ifPresent(table -> dropTable = table);
 		
 		Iterator<Entry<String, Double>> players = data.get().entrySet().iterator();
+		int k = 0;
 	    while (players.hasNext()) {
-	    	
+	    	k++;
+
 	    	msg = mlc.getString(new String[] { "message", "msg", "m"}, null);
 			dmg = mlc.getString(new String[] { "damage", "dmg", "d"}, "0");
 			color = mlc.getString(new String[] { "color", "cl"}, "display");
@@ -79,13 +83,19 @@ public class DropItem {
 			sound = mlc.getString(new String[] { "sound", "sd"}, null);
 			broadcast = mlc.getString(new String[] { "broadcast", "bc", "b"}, null);
 			if(sound!=null) sound=sound.replace(".", "_").toUpperCase();
+
 	    	glow = mlc.getBoolean(new String[] { "glow", "g"}, true);
 			stop = mlc.getBoolean(new String[] { "stop", "s"}, false);
 			explode = mlc.getBoolean(new String[] { "explode", "ex", "e"}, true);
 			toInv = mlc.getBoolean(new String[] { "toinv", "ti"}, false);
+			if(!hasDropped) {
+				shared = mlc.getBoolean(new String[] { "shared", "share", "sr"}, false);
+			}
+
 			amount = mlc.getInteger(new String[] { "amount", "a"}, 1);
 			top = mlc.getString(new String[] { "top", "T"}, null);
-			chance = mlc.getDouble(new String[] { "chance", "c"}, 1.0);
+
+			chance = mlc.getFloat(new String[] { "chance", "c"}, 1.0f);
 			expheight = mlc.getDouble(new String[] { "expheight", "exh"}, 0.6);
 			expoffset = mlc.getDouble(new String[] { "expoffset", "exo"}, 0.2);
 			
@@ -97,8 +107,6 @@ public class DropItem {
 
 
 	        AtomicBoolean skip = new AtomicBoolean(true);
-	    	double r = Math.random();
-	    	if (r>=chance) continue;
 	    	if(dmg.contains("%")){
 	    		if (dmg.contains("to")) {
 	    			String[] values = dmg.replace("%", "").split("to");
@@ -123,11 +131,20 @@ public class DropItem {
 	    		if (top.contains("to")) {
 					String[] values = top.split("to");
 					int i1 = Integer.parseInt(values[0]);
-					int i2 = Integer.parseInt(values[0])+1;
+					int i2 = Integer.parseInt(values[1])+1;
+
+					stop = false;
 
 					IntStream.range(i1, i2).forEachOrdered(n -> {
-						Entry<String, Double> a = topDamagers.get(n-1);
-						skip.set(!player.equals(a.getKey()));
+						if(!stop) {
+							Entry<String, Double> a = topDamagers.get(n-1);
+							if(player.equals(a.getKey())) {
+								skip.set(false);
+								stop = true;
+							} else {
+								skip.set(true);
+							}
+						}
 					});
 				} else {
 	    			int topR = Integer.parseInt(top);
@@ -139,8 +156,24 @@ public class DropItem {
 					}
 				}
 	    	}
+
+	    	if(shared) {
+	    		skip.set(false);
+	    		chance = 1.0f/topDamagers.size();
+	    		if(k==topDamagers.size()) {
+	    			chance = 2.0f;
+				}
+
+			}
+
+	    	if(hasDropped) continue;
+
+			double r = Math.random();
+			if (r>=chance) continue;
 	    	
 	    	if(skip.get()) continue;
+
+	    	hasDropped = true;
 
 	    	if(dropTable!=null) {
 	    		Player p = Bukkit.getPlayer(player);
@@ -183,11 +216,12 @@ public class DropItem {
 				} else {
 	    			try {
 						mythicItem = new ItemStack(Material.valueOf(item.toUpperCase()), amount);
-					} catch (Exception k) {
-						Bukkit.getServer().getConsoleSender().sendMessage(
-								"§c[ERROR] §eMythicLoot isn't able to create an item for "+
-								item+"! Verify that you can get this item with in-game commands" +
-								" like §b/mm i get <item> §e, as ML needs MM items to work for them to be dropped");
+					} catch (Exception exc) {
+						String error = "§c[ERROR] §eMythicLoot isn't able to create an item for " +
+								item + "! Verify that you can get this item with in-game commands" +
+								" like §b/mm i get "+item+"§e, as ML needs MM items to work for them to be dropped";
+						Bukkit.getServer().getConsoleSender().sendMessage(error);
+						Bukkit.getServer().getPlayer(player).sendMessage(error);
 						return;
 					}
 	    		}
@@ -236,7 +270,10 @@ public class DropItem {
 	}
 	
 	public String cct(String msg, Player p) {
-		return PlaceholderAPI.setPlaceholders(p, ChatColor.translateAlternateColorCodes('&', msg));
+		if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
+			return PlaceholderAPI.setPlaceholders(p, ChatColor.translateAlternateColorCodes('&', msg));
+		else
+			return ChatColor.translateAlternateColorCodes('&', msg);
 	}
 	
 }
