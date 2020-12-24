@@ -1,5 +1,6 @@
 package net.seyarada.mythicloot.events;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public class DeathEvent implements Listener {
 			for(Object i:e.getMobType().getConfig().getList("Rewards")) {
 				
 				MythicLineConfig mlc = new MythicLineConfig((String) i);
-				new DropItem().prepareDrop(mlc, data, HP, e.getEntity(), new LinkedList<>(data.get().entrySet()));	
+				new DropItem("a", "a", Collections.singletonList("a")).prepareDrop(mlc, data, HP, e.getEntity(), new LinkedList<>(data.get().entrySet()));
 				
 			}
 			data.forget();

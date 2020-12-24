@@ -1,6 +1,6 @@
 name: MythicLoot
 main: net.seyarada.mythicloot.MythicLoot
-version: 1.2e
+version: 1.2g
 api-version: 1.13
 depend: [MythicMobs]
 softdepend: [MythicArtifacts, PlaceholderAPI]
