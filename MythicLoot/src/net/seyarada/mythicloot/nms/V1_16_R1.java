@@ -25,10 +25,8 @@ public class V1_16_R1 {
 	
 	public void removeNBT(EntityPickupItemEvent e) {
 		ItemStack removeNBT = CraftItemStack.asNMSCopy(e.getItem().getItemStack());
-	    removeNBT.removeTag("mythicloot");
-	    e.getItem().remove();
-	    e.setCancelled(true);
-	    ((Player)e.getEntity()).getInventory().addItem(CraftItemStack.asBukkitCopy(removeNBT));
+		removeNBT.removeTag("mythicloot");
+		e.getItem().setItemStack(CraftItemStack.asBukkitCopy(removeNBT));
 	}
 	
 	public void destroyEntity(Item item, Entity entity) {

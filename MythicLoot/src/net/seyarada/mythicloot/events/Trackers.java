@@ -1,7 +1,10 @@
 package net.seyarada.mythicloot.events;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -10,6 +13,20 @@ import io.lumine.xikage.mythicmobs.api.bukkit.events.MythicMobSpawnEvent;
 import net.seyarada.mythicloot.Data;
 
 public class Trackers implements Listener {
+
+	public static Map<Player, Integer> playerSkips = new HashMap<>();
+
+	public void addSkip(Player p, int skips) {
+		playerSkips.put(p, skips);
+	}
+
+	public Integer getSkip(Player p) {
+		return playerSkips.get(p);
+	}
+
+	public void nuke() {
+		playerSkips.clear();
+	}
 
 	@EventHandler
 	public void onSpawn(MythicMobSpawnEvent e) {

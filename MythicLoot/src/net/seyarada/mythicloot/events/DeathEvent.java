@@ -28,17 +28,19 @@ public class DeathEvent implements Listener {
 			MythicConfig config = e.getMobType().getConfig();
 			boolean rank = config.getBoolean("Options.AnnounceRank");
 			boolean score = config.getBoolean("Options.AnnounceScore");
+			boolean relative = config.getBoolean("Options.Relative");
 			if (rank||score) {
-				new Board(new LinkedList<>(data.get().entrySet()), uuid, HP, rank, score);
+				new Board(new LinkedList<>(data.get().entrySet()), uuid, HP, rank, score, relative);
 			}
 			
 			
 			for(Object i:e.getMobType().getConfig().getList("Rewards")) {
 				
 				MythicLineConfig mlc = new MythicLineConfig((String) i);
-				new DropItem("a", "a", Collections.singletonList("a")).prepareDrop(mlc, data, HP, e.getEntity(), new LinkedList<>(data.get().entrySet()));
+				new DropItem().prepareDrop(mlc, data, HP, e.getEntity(), new LinkedList<>(data.get().entrySet()));
 				
 			}
+			new Trackers().nuke();
 			data.forget();
 			data.remove();
 		}

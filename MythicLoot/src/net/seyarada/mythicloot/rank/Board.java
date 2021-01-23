@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
 import net.seyarada.mythicloot.nms.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,14 +23,15 @@ public class Board {
 	Config c = new Config();
 	
 	public Board(LinkedList<Map.Entry<String, Double>> list, UUID uuid,
-				 double HP, boolean announceRank, boolean announceScore) {
+				 double HP, boolean announceRank, boolean announceScore, boolean relative) {
 		
 		Comparator<Map.Entry<String, Double>> comparator = Entry.comparingByValue();
 		list.sort(comparator.reversed());
 
 		int rankers = c.getRankers();
 		int position = 0;
-		String mobName = MythicMobs.inst().getMobManager().getMythicMobInstance(BukkitAdapter.adapt(Bukkit.getEntity(uuid))).getDisplayName();
+		ActiveMob mythicMob = MythicMobs.inst().getMobManager().getMythicMobInstance(BukkitAdapter.adapt(Bukkit.getEntity(uuid)));
+		String mobName = mythicMob.getDisplayName();
 		String mobHP = new DecimalFormat("#.##").format(HP) +"HP";
 		
 		for(Entry<String, Double> abc:list) {
@@ -38,28 +41,54 @@ public class Board {
 			List<String> messages = new ArrayList<>();
 
 			if(announceRank) cycle(c.getRankConfig(), true, false, rankers, position, mobName, mobHP,
-					list, abc, HP, target, messages, uuid);
+					list, abc, HP, target, messages, uuid, relative, mythicMob);
 			if(announceScore)  cycle(c.getScoreConfig(), false, true, rankers, position, mobName, mobHP,
-					list, abc, HP, target, messages, uuid);
+					list, abc, HP, target, messages, uuid, relative, mythicMob);
 
 		}
 	}
 
 	public void cycle(List<?> config, boolean announceRank, boolean announceScore, int rankers,
 					  int position, String mobName, String mobHP, LinkedList<Entry<String, Double>> list,
-					  Entry<String, Double> abc, double HP, Player target, List<String> messages, UUID uuid) {
+					  Entry<String, Double> abc, double HP, Player target, List<String> messages, UUID uuid,
+					  boolean relative, ActiveMob mythicMob) {
 
 		for(Object j:config) {
 			boolean skip = false;
 			if(j==null) continue;
 			String line = j.toString();
+			if(mobName==null) {
+				mobName = mythicMob.getEntity().getBukkitEntity().getName();
+			}
 			if (line.contains("<mob.name>")) line = line.replace("<mob.name>", mobName);
-			if (line.contains("<mob.hp>")) line = line.replace("<mob.hp>", mobHP);
 			if (line.contains("<player.rank>")) line = line.replace("<player.rank>", String.valueOf(position));
-			if (line.contains("<player.dmg>"))
-				line = line.replace("<player.dmg>", new DecimalFormat("#.##").format(abc.getValue()/HP*100));
-			if (line.contains("<player.damage>"))
-				line = line.replace("<player.damage>", new DecimalFormat("#.##").format(abc.getValue()));
+
+
+			// TODO
+			// This is ugly
+			if(!relative) {
+				if (line.contains("<mob.hp>")) line = line.replace("<mob.hp>", mobHP);
+				if (line.contains("<player.dmg>"))
+					line = line.replace("<player.dmg>",
+							new DecimalFormat("#.##").format(abc.getValue()/HP*100));
+				if (line.contains("<player.damage>"))
+					line = line.replace("<player.damage>",
+							new DecimalFormat("#.##").format(abc.getValue()));
+			} else {
+				double Health = mythicMob.getEntity().getMaxHealth();
+				double percentDMG = abc.getValue() / HP*100;
+				double betterPercent = abc.getValue() / HP;
+				double relativeDamage = Health*betterPercent;
+
+				if (line.contains("<mob.hp>"))
+					line = line.replace("<mob.hp>", String.valueOf(Health));
+				if (line.contains("<player.dmg>"))
+					line = line.replace("<player.dmg>",
+							new DecimalFormat("#.##").format(percentDMG));
+				if (line.contains("<player.damage>"))
+					line = line.replace("<player.damage>",
+							new DecimalFormat("#.##").format(relativeDamage));
+			}
 
 			String pattern = "<([0-9]*).name>";
 			Pattern r = Pattern.compile(pattern);
@@ -83,7 +112,8 @@ public class Board {
 				for (int i = 0; i < m.groupCount(); i++) {
 					int index = Integer.parseInt(m.group(i).replace(".dmg>", "").replace("<", ""));
 					if (index<=rankers && list.size() >= index) {
-						line = line.replace("<"+index+".dmg>", String.valueOf(new DecimalFormat("#.##").format(list.get(index-1).getValue() /HP*100)));
+						line = line.replace("<"+index+".dmg>", String.valueOf(new DecimalFormat("#.##").format(
+								list.get(index-1).getValue() /HP*100)));
 					} else {
 						skip = true;
 					}
@@ -98,7 +128,16 @@ public class Board {
 				for (int i = 0; i < m.groupCount(); i++) {
 					int index = Integer.parseInt(m.group(i).replace(".damage>", "").replace("<", ""));
 					if (index<=rankers && list.size() >= index) {
-						line = line.replace("<"+index+".damage>", new DecimalFormat("#.##").format(list.get(index-1).getValue()));
+						if(!relative) {
+							line = line.replace("<"+index+".damage>", new DecimalFormat("#.##").format(
+									list.get(index-1).getValue()));
+						} else {
+							double oldDMG = list.get(index - 1).getValue();
+							double percentOldDMG = oldDMG / HP;
+							double newPercentDMG = mythicMob.getEntity().getMaxHealth() / percentOldDMG;
+							line = line.replace("<"+index+".damage>", new DecimalFormat("#.##").format(
+									newPercentDMG));
+						}
 					} else {
 						skip = true;
 					}

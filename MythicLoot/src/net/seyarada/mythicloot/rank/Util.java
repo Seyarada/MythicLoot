@@ -14,38 +14,40 @@ public class Util {
 	public void ColorHandler(Item item, String color) {
 		item.setGlowing(true);
 		Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
-	
-		if(item.getItemStack().getItemMeta().getDisplayName().startsWith("§0"))
-			color = "BLACK";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§1"))
-			color = "DARK_BLUE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§2"))
-			color = "DARK_GREEN";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§3"))
-			color = "DARK_AQUA";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§4"))
-			color = "DARK_RED";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§5"))
-			color = "DARK_PURPLE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§6"))
-			color = "GOLD";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§7"))
-			color = "GRAY";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§8"))
-			color = "DARK_GRAY";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§9"))
-			color = "BLUE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§a"))
-			color = "GREEN";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§b"))
-			color = "AQUA";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§c"))
-			color = "RED";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§d"))
-			color = "LIGHT_PURPLE";
-		else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§e"))
-			color = "YELLOW";
-		
+
+		if(color.equals("display")) {
+			if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§0"))
+				color = "BLACK";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§1"))
+				color = "DARK_BLUE";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§2"))
+				color = "DARK_GREEN";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§3"))
+				color = "DARK_AQUA";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§4"))
+				color = "DARK_RED";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§5"))
+				color = "DARK_PURPLE";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§6"))
+				color = "GOLD";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§7"))
+				color = "GRAY";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§8"))
+				color = "DARK_GRAY";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§9"))
+				color = "BLUE";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§a"))
+				color = "GREEN";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§b"))
+				color = "AQUA";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§c"))
+				color = "RED";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§d"))
+				color = "LIGHT_PURPLE";
+			else if (item.getItemStack().getItemMeta().getDisplayName().startsWith("§e"))
+				color = "YELLOW";
+		}
+
 	    switch(color.toUpperCase()) {
 	      
 	      case "YELLOW":
@@ -403,7 +405,7 @@ public class Util {
 		AMPERSAND('&', 5),
 		ASTERISK('*', 5),
 		LEFT_PARENTHESIS('(', 4),
-		RIGHT_PERENTHESIS(')', 4),
+		RIGHT_PARENTHESIS(')', 4),
 		MINUS('-', 5),
 		UNDERSCORE('_', 5),
 		PLUS_SIGN('+', 5),
@@ -427,6 +429,7 @@ public class Util {
 		PERIOD('.', 1),
 		COMMA(',', 1),
 		SPACE(' ', 3),
+		BOLD_BAR('▬', 3),
 		DEFAULT('a', 4);
 	 
 		private final char character;

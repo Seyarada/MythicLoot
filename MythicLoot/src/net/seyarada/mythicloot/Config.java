@@ -3,24 +3,29 @@ package net.seyarada.mythicloot;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.configuration.file.FileConfiguration;
+import io.lumine.xikage.mythicmobs.io.IOLoader;
+import io.lumine.xikage.mythicmobs.io.MythicConfig;
 
 import io.lumine.xikage.mythicmobs.MythicMobs;
+import org.bukkit.configuration.file.FileConfiguration;
 
 public class Config {
 
 	String message = "Configuration.Compatibility.MythicLoot.Message";
 	String rank = "Configuration.Compatibility.MythicLoot.Rank";
 	String score = "Configuration.Compatibility.MythicLoot.Score";
-	FileConfiguration config = 	MythicMobs.inst().getConfig();
-	
-	public Config() {
+	String rankers = "Configuration.Compatibility.MythicLoot.RankersToAnnounce";
+
+	public void generate() {
+
+		FileConfiguration config = 	MythicMobs.inst().getConfig();
 		if(config.contains(message)) {
 			List<String> old = config.getStringList(message);
 			config.set(message, null);
 			config.set(rank, old);
 
-		} else if(!config.contains(rank)) {
+		}
+		if(!config.contains(rank)) {
 			List<String> listOfStrings = Arrays.asList(
 					/*
 					Placeholders:
@@ -45,7 +50,8 @@ public class Config {
 			config.set(rank, listOfStrings);
 		}
 
-		List<String> listOfStrings = Arrays.asList(
+		if(!config.contains(score)) {
+			List<String> listOfStrings = Arrays.asList(
 					"&8&m======================",
 					"<mob.name> &7- &a<mob.hp>",
 					"&e#1 &7|&b &f<1.name> &7|&b <1.dmg>%",
@@ -54,23 +60,29 @@ public class Config {
 					"",
 					"Your rank: &a#<player.rank>",
 					"&8&m======================"
-		);
-		config.set(score, listOfStrings);
-
-		config.set("Configuration.Compatibility.MythicLoot.RankersToAnnounce", 3);
+			);
+			config.set(score, listOfStrings);
+		}
+		if(!config.contains(rankers))
+			config.set(rankers, 3);
 		MythicMobs.inst().saveConfig();
 	}
-	
+
 	public List<?> getRankConfig() {
-		return config.getStringList(rank);
+		return getConfig().getStringList("Rank");
 	}
 
 	public List<?> getScoreConfig() {
-		return config.getStringList(score);
+		return getConfig().getStringList("Score");
 	}
-	
+
 	public int getRankers() {
-		return config.getInt("Configuration.Compatibility.MythicLoot.RankersToAnnounce");
+		return getConfig().getInteger("RankersToAnnounce");
 	}
-	
+
+	public MythicConfig getConfig() {
+		IOLoader settings = new IOLoader(MythicMobs.inst(), "config.yml");
+		return new MythicConfig("Configuration.Compatibility.MythicLoot", settings.getCustomConfig());
+	}
+
 }

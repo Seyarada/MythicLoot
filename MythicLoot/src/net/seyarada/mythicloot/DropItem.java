@@ -1,6 +1,5 @@
 package net.seyarada.mythicloot;
 
-import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,12 +8,15 @@ import java.util.stream.IntStream;
 import io.lumine.xikage.mythicmobs.adapters.AbstractEntity;
 import io.lumine.xikage.mythicmobs.adapters.AbstractPlayer;
 import io.lumine.xikage.mythicmobs.drops.*;
-import io.lumine.xikage.mythicmobs.io.IOHandler;
-import io.lumine.xikage.mythicmobs.io.IOLoader;
-import io.lumine.xikage.mythicmobs.io.MythicConfig;
 import io.lumine.xikage.mythicmobs.mobs.ActiveMob;
-import io.lumine.xikage.mythicmobs.skills.placeholders.parsers.RandomDouble;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.milkbowl.vault.economy.Economy;
+import net.mystipvp.holobroadcast.holograms.HologramPlayer;
+import net.mystipvp.holobroadcast.holograms.HologramPlayersManager;
+import net.seyarada.mythicloot.events.Trackers;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -30,7 +32,7 @@ import io.lumine.xikage.mythicmobs.io.MythicLineConfig;
 import io.lumine.xikage.mythicmobs.items.MythicItem;
 import net.seyarada.mythicloot.rank.Util;
 
-public class DropItem extends DropTable {
+public class DropItem  {
 	
 	Util u = new Util();
 	ISchedulers s = new ISchedulers();
@@ -43,29 +45,35 @@ public class DropItem extends DropTable {
 	private String subtitle;
 	private String sound;
 	private String broadcast;
-	private String item;
 	private String command;
+	private String holobroadcast;
+	private String actionbar;
 	private boolean glow;
 	private boolean stop;
 	private boolean explode;
 	private boolean toInv;
 	private boolean shared;
+	private boolean legacy;
 	private int amount;
+	private int titleDuration;
+	private int titleFade;
+	private int XP;
+	private int skip;
 	private float chance;
+	private float multiplier;
 	private double expheight;
 	private double expoffset;
+	private double money;
 	private DropTable dropTable;
 
-	public DropItem(String file, String name, List<String> drops) {
-		super(file, name, drops);
-	}
+	private final boolean debug = true;
 
-	public void prepareDrop(MythicLineConfig mlc, Data data, double HP, Entity e, LinkedList<Map.Entry<String, Double>> topDamagers) {
+	public void prepareDrop(MythicLineConfig mlc, Data data, double HP, Entity e, LinkedList<Entry<String, Double>> topDamagers) {
 	    // Gets the item/part before the {}
-		item = mlc.getKey();
+		String item = mlc.getKey();
 
 		// Gets the players / damage arranged in order
-		Comparator<Map.Entry<String, Double>> comparator = Entry.comparingByValue();
+		Comparator<Entry<String, Double>> comparator = Entry.comparingByValue();
 		topDamagers.sort(comparator.reversed());
 
 		// Gets if the item is a dropTable
@@ -82,73 +90,72 @@ public class DropItem extends DropTable {
             Entry<String, Double> pair = players.next();
             String player = pair.getKey();  // Player
             double value = pair.getValue(); // Damage dealt
+
+			if(debug) {
+				System.out.println("#####");
+				System.out.println("Running drop "+item+" for "+player+" with "+value+" damage.");
+			}
+
+			Integer toSkip = new Trackers().getSkip(Bukkit.getPlayer(player));
+			if(toSkip!=null) {
+				new Trackers().addSkip(Bukkit.getPlayer(player), toSkip-1);
+				if(toSkip>0) {
+					continue;
+				}
+			}
+
 	    	k++;
 
 	    	// Gets the attributes and runs the conditions
 	    	getAttributes(mlc);
-	    	if(!runConditions(value, HP, player, topDamagers, k))
+	    	boolean passedConditions = runConditions(value, HP, player, topDamagers, k);
+			if(debug) System.out.println("Conditions result is "+passedConditions);
+	    	if(!passedConditions)
 	    	    continue;
 
+
+			AbstractPlayer p = BukkitAdapter.adapt(Bukkit.getPlayer(player));
+			AbstractEntity entity = BukkitAdapter.adapt(e);
+			ActiveMob caster = MythicMobs.inst().getMobManager().getMythicMobInstance(entity);
 	    	if(dropTable!=null) {
-                AbstractPlayer p = BukkitAdapter.adapt(Bukkit.getPlayer(player));
-                AbstractEntity entity = BukkitAdapter.adapt(e);
-                ActiveMob caster = MythicMobs.inst().getMobManager().getMythicMobInstance(entity);
 	    		LootBag loot = dropTable.generate(new DropMetadata(caster, p));
-	    		System.out.println(dropTable.getFileName());
 
-	    		String file = dropTable.getFileName();
-	    		String name = dropTable.getInternalName();
+				for (Drop type : loot.getDrops()) {
 
-				IOLoader<MythicMobs> defaultDroptables = new IOLoader(MythicMobs.inst(), "ExampleDropTables.yml", "DropTables");
-				List<File> droptableFiles = IOHandler.getAllFiles(defaultDroptables.getFile().getParent());
-				List<IOLoader<MythicMobs>> droptableLoaders = IOHandler.getSaveLoad(MythicMobs.inst(), droptableFiles, "DropTables");
-				DropTable newTable = null;
-
-				for (IOLoader<MythicMobs> sl : droptableLoaders) {
-					if(sl.getFile().getName().equals(file)) {
-						Set<String> lS = sl.getCustomConfig().getConfigurationSection("."+name).getKeys(false);
-						int ct = 0;
-						MythicConfig mc = new MythicConfig(name, sl.getCustomConfig());
-						List<String> myList = mc.getStringList("Drops");
-						for (String s : myList) {
-							System.out.println("S: "+s);
-							MythicLineConfig imlc = new MythicLineConfig(file, s);
-							double weight = new tableHander(s, imlc, file).getWeight();
-							double chancha = imlc.getDouble(new String[]{"multiplier", "ml"}, 1d);
-							if(chancha>1d) {
-								String replace = s.replace(String.valueOf(weight), String.valueOf(weight * chancha));
-								myList.set(ct, replace);
-								mc.set("Drops", myList);
-								this.to
-							}
-							ct++;
-						}
-
-						System.out.println(mc.getStringList("Drops"));
-						newTable = new DropTable(file, name+"temp", mc);
-						System.out.println(newTable.hasDrops());
-
-					}
-				}
-
-				for (Drop type : dropTable.generate(new DropMetadata(caster, p)).getDrops()) {
-					System.out.println("Droptable: " +type);
-				}
-
-				for (Drop type : newTable.generate(new DropMetadata(caster, p)).getDrops()) {
-					System.out.println("Newtable " +type);
-				}
-
-				for (Drop type : newTable.generate(new DropMetadata(caster, p)).getDrops()) {
 					MythicLineConfig subDrop = new MythicLineConfig(type.getLine());
 
-                    getAttributes(subDrop);
+					if(!legacy)
+                   		getAttributes(subDrop);
+					else {
+						String tempSound = subDrop.getString(new String[]{"sound", "sd"}, null);
+						if (tempSound != null) sound = tempSound;
+
+						String tempBroadcast = subDrop.getString(new String[]{"broadcast", "bc", "b"}, null);
+						if (tempBroadcast != null) broadcast = tempBroadcast;
+
+						String tempTitle = subDrop.getString(new String[]{"title", "t"}, null);
+						if (tempTitle != null) title = tempTitle;
+
+						String tempSubtitle = subDrop.getString(new String[]{"subtitle", "st"}, null);
+						if (tempSubtitle != null) subtitle = tempSubtitle;
+
+						String tempCommand = subDrop.getString(new String[]{"command", "cmd"}, null);
+						if (tempCommand != null) command = tempCommand;
+
+						boolean tempInv = subDrop.getBoolean(new String[] { "toinv", "ti"}, false);
+						if (tempInv) toInv = true;
+					}
 
 					if (type instanceof IItemDrop) {
 						ItemStack mythicItem = BukkitAdapter.adapt(((IItemDrop) type)
-                                .getDrop(new DropMetadata(null, p)));
-						drop(player, e, mythicItem);
+								.getDrop(new DropMetadata(null, p)));
+						drop(player, e, mythicItem, null);
 					}
+
+					else if (type instanceof IIntangibleDrop) {
+						((IIntangibleDrop) type).giveDrop(p, new DropMetadata(null, p));
+					}
+
 				}
 	    	}
 	    	else {
@@ -156,25 +163,34 @@ public class DropItem extends DropTable {
 				ItemStack mythicItem;
 				if (mI.isPresent()) {
 					mythicItem = BukkitAdapter.adapt(mI.get().generateItemStack(amount));
-				} else {
-	    			try {
+					drop(player, e, mythicItem, null);
+				}
+
+				else {
+					try {
 						mythicItem = new ItemStack(Material.valueOf(item.toUpperCase()), amount);
+						drop(player, e, mythicItem, null);
 					} catch (Exception exc) {
 						String error = "§c[ERROR] §eMythicLoot isn't able to create an item for " +
-								item + "! Verify that you can get this item with in-game commands" +
-								" like §b/mm i get "+item+"§e, as ML needs MM items to work for them to be dropped";
+								item + "! Verify that you can get this item with the in-game command" +
+								" §b/mm i get " + item + "§e, as ML needs MM items to work for them to be dropped";
 						Bukkit.getServer().getConsoleSender().sendMessage(error);
-						Bukkit.getServer().getPlayer(player).sendMessage(error);
+						Objects.requireNonNull(Bukkit.getServer().getPlayer(player)).sendMessage(error);
 						return;
 					}
-	    		}
-	    		drop(player, e, mythicItem);
+				}
 	    	}
-	    	if(stop) players.remove();
+
+
+			if(stop) {
+				if(debug) System.out.println("Stop is true, removing "+player+" from getting more drops.");if(debug) System.out.println("Stop is true, removing "+player+" from getting more drops.");
+				players.remove();
+			}
 	    }
 	}
 	
-	public void drop(String player, Entity e, ItemStack mythicItem) {
+	public void drop(String player, Entity e, ItemStack mythicItem, String commandDrop) {
+
 
 	    if(player==null||mythicItem==null) return;
 
@@ -183,6 +199,7 @@ public class DropItem extends DropTable {
         Map<String, String> tags = new HashMap<>();
 	    tags.put("mythicloot", player);
         mythicItem = MythicItem.addItemNBT(mythicItem, "Base", tags);
+
     	if(msg!=null&&p!=null) {
     		p.sendMessage(cct(msg, p));
     	}
@@ -193,12 +210,32 @@ public class DropItem extends DropTable {
     	}
 
     	if(p!=null) {
+
+    		if(skip>0) {
+				new Trackers().addSkip(p, skip);
+			}
+
+			if(commandDrop!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandDrop);
+			if(XP>0) p.giveExp(XP);
 			if(sound!=null) p.playSound(p.getLocation(), Sound.valueOf(sound), 1, 1);
-			if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle, p), 1, 40, 1);
-			else if(subtitle==null&&title!=null)p.sendTitle(cct(title, p), "", 1, 40, 1);
-			else if(title != null) p.sendTitle(cct(title, p), cct(subtitle, p), 1, 40, 1);
+			if(title==null&&subtitle!=null)p.sendTitle("", cct(subtitle, p), titleFade, titleDuration, titleFade);
+			else if(subtitle==null&&title!=null)p.sendTitle(cct(title, p), "", titleFade, titleDuration, titleFade);
+			else if(title != null) p.sendTitle(cct(title, p), cct(subtitle, p), titleFade, titleDuration, titleFade);
 			if(command!=null) Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
 					command.replace("<player.name>", p.getName()));
+			if(actionbar!=null)
+				p.sendActionBar(TextComponent.fromLegacyText(cct(actionbar, p)));
+		}
+
+		if (holobroadcast != null && Bukkit.getServer().getPluginManager().getPlugin("HoloBroadcast") != null) {
+			HologramPlayersManager manager = HologramPlayersManager.getInstance();
+			HologramPlayer holoPlayer = manager.getHologramPlayerFromUUID(p.getUniqueId());
+			holoPlayer.showHUD(holobroadcast, -1);
+		}
+
+    	if(money>0 && Bukkit.getServer().getPluginManager().getPlugin("Vault") != null) {
+			Economy economy = MythicLoot.getEconomy();
+			economy.depositPlayer(p, money);
 		}
 
 		if(toInv&&p!=null && p.getInventory().firstEmpty()>=0) {
@@ -222,7 +259,7 @@ public class DropItem extends DropTable {
         dmg = mlc.getString(new String[] { "damage", "dmg", "d"}, "0");
 
         // Color of the drop if glow is active
-        color = mlc.getString(new String[] { "color", "cl"}, "display");
+        color = mlc.getString(new String[] { "color", "colour", "cl"}, "display");
 
         // Title to display to the player
         title = mlc.getString(new String[] { "title", "t"}, null);
@@ -240,6 +277,12 @@ public class DropItem extends DropTable {
         // Message to broadcast
         broadcast = mlc.getString(new String[] { "broadcast", "bc", "b"}, null);
 
+		// Message to broadcast
+		holobroadcast = mlc.getString(new String[] { "holobroadcast", "holobc", "holob"}, null);
+
+		// Message to display in the actionbar2
+		actionbar = mlc.getString(new String[] { "actionbar", "ab"}, null);
+
         // If the item should glow
         glow = mlc.getBoolean(new String[] { "glow", "g"}, true);
 
@@ -255,14 +298,35 @@ public class DropItem extends DropTable {
         // If the reward should be shared among all players
         shared = mlc.getBoolean(new String[] { "shared", "share", "sr"}, false);
 
+		// If the legacy dropTable attributes should be used
+		legacy = mlc.getBoolean("legacy", false);
+
         // Amount of the item to drop
-        amount = mlc.getInteger(new String[] { "amount", "a"}, 1);
+        amount = ranged(mlc.getString(new String[] { "amount", "a"}, "1"));
+
+		// Amount of money to give
+		money = ranged(mlc.getString(new String[] { "money", "eco"}, "0"));
+
+		// The amount of ticks the title is going to last
+		titleDuration = mlc.getInteger(new String[] { "titleduration", "td"}, 40);
+
+		// The amount of ticks for the title to fade in/out
+		titleFade = mlc.getInteger(new String[] { "titlefade", "tf"}, 1);
+
+		// The amount of XP to give
+		XP = ranged(mlc.getString("xp", "0"));
+
+		// The amount of lines to skip
+		skip = mlc.getInteger("skip", 0);
 
         // Position required to get the reward
         top = mlc.getString(new String[] { "top", "T"}, null);
 
         // The chance
         chance = mlc.getFloat(new String[] { "chance", "c"}, 1.0f);
+
+        // Multiplier, increases the chance depending of the damage done
+		multiplier = mlc.getFloat(new String[]{"multiplier", "ml"}, -1f);
 
         // Explosion height/offset
         expheight = mlc.getDouble(new String[] { "expheight", "exh"}, 0.6);
@@ -274,7 +338,7 @@ public class DropItem extends DropTable {
         if(shared) {
             // Applies the chance to shared, this means that the first time this runs, it will
             // throw the dice and if successful, it will mark all the shared as false
-            if(chanceCondition(chance)) {
+            if(chanceCondition(chance, value, HP)) {
                 shared = false;
                 return false;
             }
@@ -284,7 +348,7 @@ public class DropItem extends DropTable {
             if(k==topDamagers.size()) {
                 chance = 1.0f;
             }
-            if(chanceCondition(chance) && topCondition(player, topDamagers)) {
+            if(chanceCondition(chance, value, HP) && topCondition(player, topDamagers)) {
                 shared = false;
                 return true;
             }
@@ -294,7 +358,7 @@ public class DropItem extends DropTable {
         else {
             return damageCondition(value, HP) &&
             topCondition(player, topDamagers) &&
-            chanceCondition(chance);
+            chanceCondition(chance, value, HP);
         }
     }
 
@@ -324,8 +388,10 @@ public class DropItem extends DropTable {
 
                 AtomicBoolean j = new AtomicBoolean(false);
                 IntStream.range(i1, i2).forEachOrdered(n -> {
-                        Entry<String, Double> a = topDamagers.get(n-1);
-                        if(player.equals(a.getKey())) j.set(true);
+                	if(topDamagers.size()>=n) {
+						Entry<String, Double> a = topDamagers.get(n - 1);
+						if (player.equals(a.getKey())) j.set(true);
+					}
                 });
                 return j.get();
 
@@ -342,12 +408,74 @@ public class DropItem extends DropTable {
         return true;
     }
 
-    public boolean chanceCondition(float chance) {
+    public boolean chanceCondition(float chance, double value, double HP) {
+		if(multiplier>0) {
+			float percentDamage = (float) value / (float) HP;
+			chance = chance + multiplier * percentDamage;
+		}
+
         double r = Math.random();
         return chance>=r;
     }
 
-    public class tableHander extends Drop {
+	public String cct(String msg, Player p) {
+		msg = msg.replace("<money>", String.valueOf(money));
+		if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
+			return PlaceholderAPI.setPlaceholders(p, ChatColor.translateAlternateColorCodes('&', msg));
+		else
+			return ChatColor.translateAlternateColorCodes('&', msg);
+	}
+
+
+	public int ranged(String i) {
+		if(i.contains("to")) {
+
+			int min = Integer.parseInt(i.split("to")[0]);
+			int max = Integer.parseInt(i.split("to")[1]);
+
+			return new Random().nextInt((max - min) + 1) + min;
+
+		} else return Integer.parseInt(i);
+	}
+
+	/*
+	# This is to be implemented for when MM fixes creating new dropTables with a mythicConfig
+
+	public class tableHander extends Drop {
+
+		String file = dropTable.getFileName();
+		String name = dropTable.getInternalName();
+
+		IOLoader<MythicMobs> defaultDroptables = new IOLoader(MythicMobs.inst(), "ExampleDropTables.yml", "DropTables");
+		List<File> droptableFiles = IOHandler.getAllFiles(defaultDroptables.getFile().getParent());
+		List<IOLoader<MythicMobs>> droptableLoaders = IOHandler.getSaveLoad(MythicMobs.inst(), droptableFiles, "DropTables");
+		DropTable newTable = null;
+
+		for (IOLoader<MythicMobs> sl : droptableLoaders) {
+			if(sl.getFile().getName().equals(file)) {
+				Set<String> lS = sl.getCustomConfig().getConfigurationSection("."+name).getKeys(false);
+				int ct = 0;
+				MythicConfig mc = new MythicConfig(name, sl.getCustomConfig());
+				List<String> myList = mc.getStringList("Drops");
+				for (String s : myList) {
+					System.out.println("S: "+s);
+					MythicLineConfig imlc = new MythicLineConfig(file, s);
+					double weight = new tableHander(s, imlc, file).getWeight();
+					double chancha = imlc.getDouble(new String[]{"multiplier", "ml"}, 1d);
+					if(chancha>1d) {
+						String replace = s.replace(String.valueOf(weight), String.valueOf(weight * chancha));
+						myList.set(ct, replace);
+						mc.set("Drops", myList);
+					}
+					ct++;
+				}
+
+				System.out.println(mc.getStringList("Drops"));
+				newTable = new DropTable(file, name+"temp", mc);
+				System.out.println(newTable.hasDrops());
+
+			}
+		}
 
 		String fileName;
 		String line;
@@ -363,13 +491,6 @@ public class DropItem extends DropTable {
 			return tableHander.getDrop(fileName, line).getWeight();
 		}
 	}
+	*/
 
-
-	public String cct(String msg, Player p) {
-		if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
-			return PlaceholderAPI.setPlaceholders(p, ChatColor.translateAlternateColorCodes('&', msg));
-		else
-			return ChatColor.translateAlternateColorCodes('&', msg);
-	}
-	
 }
